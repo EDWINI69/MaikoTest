@@ -9,9 +9,17 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
   100,
   window.innerWidth / window.innerHeight,
-  0.1,
+  1,
   1000
 );
+
+const canvas = document.createElement("canvas");
+const gl =
+  canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+if (!gl) {
+  console.error("WebGL no está soportado en este navegador.");
+}
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -33,45 +41,78 @@ renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 camera.position.setZ(30);
-camera.position.setX(-3);
 
 renderer.render(scene, camera);
 
+// Iluminacion
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(0, 0, 5);
+scene.add(directionalLight);
+
 // Torus
 
-// Lights
-
-const pointLight = new THREE.PointLight(0xffffff);
-pointLight.position.set(5, 5, 5);
-
-const ambientLight = new THREE.AmbientLight(0xffffff);
-scene.add(pointLight, ambientLight);
-
-const spaceTexture = new THREE.TextureLoader().load("./public/space.jpg");
+const spaceTexture = new THREE.TextureLoader().load("./public/museum-tal.jpg");
 scene.background = spaceTexture;
 
-// Moon
+// scene.add(cylinder);
 
-const maikotexture = new THREE.TextureLoader().load("./public/maiko.jpeg");
+const button = document.getElementById("botono");
+let modeloActivo = null; // Ahora está vacío
 
-const tal = new THREE.CylinderGeometry(5, 5, 20, 32);
-const material1 = new THREE.MeshBasicMaterial({ map: maikotexture });
-const cylinder = new THREE.Mesh(tal, material1);
-cylinder.scale.set(1, 1, 1);
+// MAIKO-FEO
+let maikomodel = null;
+const loader1 = new GLTFLoader().setPath("./public/models/");
+loader1.load("maiko-krilin.glb", function (gltf) {
+  maikomodel = gltf.scene;
+  maikomodel.position.set(0, -8, 0);
+  maikomodel.scale.set(20, 20, 20);
+  scene.add(maikomodel);
 
-scene.add(cylinder);
+  if (!modeloActivo) {
+    modeloActivo = maikomodel;
+  }
+});
 
-// const loader = new GLTFLoader().setPath("/models/");
-// loader.load("bizcochon.glb", function (gltf) {
-//   const mesho = gltf.scene;
-//   mesho.position.set(5, -20, -3);
-//   mesho.scale.set(6, 6, 6);
-//   scene.add(mesho);
-// });
+// SILENT BIZCOCHO HILL
+let mesho = null;
+const loader2 = new GLTFLoader().setPath("./public/models/");
+loader2.load("Bizcochito-cover.glb", function (gltf) {
+  mesho = gltf.scene;
+  mesho.position.set(0, -18, 0);
+  mesho.scale.set(6, 6, 6);
+  mesho.visible = false;
+  scene.add(mesho);
+});
 
-cylinder.position.z = 1;
-cylinder.position.setX(1);
-cylinder.scale.set(1, 1, 1);
+// SILENT BIZCOCHO HILL
+let peramodel = null;
+const loader3 = new GLTFLoader().setPath("./public/models/");
+loader3.load("braylinPERA3.0.glb", function (gltf) {
+  peramodel = gltf.scene;
+  peramodel.position.set(0, -11, 0);
+  peramodel.scale.set(9, 9, 9);
+  peramodel.visible = false;
+  scene.add(peramodel);
+});
+
+// Botón de cambio
+button.addEventListener("click", function () {
+  // Desactivar el modelo actual
+  modeloActivo.visible = false;
+
+  // Cambiar el modelo activo
+  if (modeloActivo === maikomodel) {
+    modeloActivo = mesho;
+  } else if (modeloActivo === mesho) {
+    modeloActivo = peramodel;
+  } else {
+    modeloActivo = maikomodel;
+  }
+
+  // Activar el nuevo modelo
+  modeloActivo.visible = true;
+});
 
 // Scroll Animation
 
@@ -95,7 +136,10 @@ window.addEventListener("resize", onWindowsSize, false);
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  cylinder.rotation.y += 0.01;
+
+  if (modeloActivo) {
+    modeloActivo.rotation.y += 0.02; // Rotate only the active model
+  }
 
   renderer.render(scene, camera);
 }
