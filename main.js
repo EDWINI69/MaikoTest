@@ -46,7 +46,7 @@ renderer.render(scene, camera);
 
 // Iluminacion
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 directionalLight.position.set(0, 0, 5);
 scene.add(directionalLight);
 
